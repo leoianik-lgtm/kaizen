@@ -1,0 +1,11 @@
+{
+  "name": "kaizen-app",
+  "version": "1.0.0",
+  "description": "Aplicação Corporativa Kaizen - Volvo Group",
+  "scripts": {
+    "build": "echo 'No build needed - static HTML app'"
+  },
+  "keywords": ["kaizen", "volvo", "static-web-app"],
+  "author": "Volvo Group",
+  "license": "MIT"
+}
