@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaizen List - Volvo Group</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .filter-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+        }
+        .filter-group select, .filter-group input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .kaizen-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .kaizen-table th, .kaizen-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .kaizen-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-draft { background: #fff3cd; color: #856404; }
+        .status-in-progress { background: #cce5ff; color: #004085; }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .pagination button:hover {
+            background: #f8f9fa;
+        }
+        .pagination button.active {
+            background: #0078d4;
+            color: white;
+            border-color: #0078d4;
+        }
+        .btn {
+            background: #0078d4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #106ebe;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🚀 Kaizen Management</h1>
+                <p>Continuous Improvement Tracking</p>
+            </div>
+            <div>
+                <a href="/dashboard.html" class="btn">← Dashboard</a>
+                <a href="#" class="btn">+ New Kaizen</a>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Status</label>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="Draft">Draft</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Department</label>
+                <select id="departmentFilter">
+                    <option value="">All Departments</option>
+                    <option value="Manufacturing">Manufacturing</option>
+                    <option value="Quality">Quality</option>
+                    <option value="Logistics">Logistics</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Safety">Safety</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Page Size</label>
+                <select id="limitFilter">
+                    <option value="10">10 per page</option>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">Loading kaizens...</div>
+        
+        <div id="kaizenContent" style="display: none;">
+            <table class="kaizen-table">
+                <thead>
+                    <tr>
+                        <th>Kaizen #</th>
+                        <th>Type</th>
+                        <th>Department</th>
+                        <th>Leader</th>
+                        <th>SQDCEP</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody id="kaizenTableBody">
+                </tbody>
+            </table>
+            
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentFilters = {};
+
+        async function loadKaizens() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('kaizenContent').style.display = 'none';
+
+                const params = new URLSearchParams({
+                    page: currentPage,
+                    limit: document.getElementById('limitFilter').value || 10,
+                    ...currentFilters
+                });
+
+                const response = await fetch(`/api/kaizens?${params}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayKaizens(data.kaizens);
+                    displayPagination(data.pagination);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('kaizenContent').style.display = 'block';
+                } else {
+                    throw new Error(data.error || 'Failed to load kaizens');
+                }
+            } catch (error) {
+                console.error('Error loading kaizens:', error);
+                document.getElementById('loading').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        function displayKaizens(kaizens) {
+            const tbody = document.getElementById('kaizenTableBody');
+            tbody.innerHTML = '';
+
+            kaizens.forEach(kaizen => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${kaizen.KaizenNumber}</strong></td>
+                    <td>${kaizen.TypeName}</td>
+                    <td>${kaizen.DepartmentName}</td>
+                    <td>${kaizen.Leader}</td>
+                    <td>${kaizen.SQDCEPCategory}</td>
+                    <td><span class="status-badge status-${kaizen.Status.toLowerCase().replace(' ', '-')}">${kaizen.Status}</span></td>
+                    <td>${kaizen.ActionCount} actions</td>
+                    <td>${new Date(kaizen.CreatedAt).toLocaleDateString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function displayPagination(pagination) {
+            const paginationDiv = document.getElementById('pagination');
+            paginationDiv.innerHTML = '';
+
+            for (let i = 1; i <= pagination.pages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.className = i === pagination.page ? 'active' : '';
+                button.onclick = () => {
+                    currentPage = i;
+                    loadKaizens();
+                };
+                paginationDiv.appendChild(button);
+            }
+        }
+
+        function applyFilters() {
+            currentFilters = {};
+            
+            const status = document.getElementById('statusFilter').value;
+            const department = document.getElementById('departmentFilter').value;
+            
+            if (status) currentFilters.status = status;
+            if (department) currentFilters.department = department;
+            
+            currentPage = 1;
+            loadKaizens();
+        }
+
+        // Event listeners
+        document.getElementById('statusFilter').addEventListener('change', applyFilters);
+        document.getElementById('departmentFilter').addEventListener('change', applyFilters);
+        document.getElementById('limitFilter').addEventListener('change', applyFilters);
+
+        // Load initial data
+        loadKaizens();
+    </script>
+</body>
+</html>
