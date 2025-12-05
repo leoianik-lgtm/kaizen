@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaizen - Aplicação Corporativa</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .user-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .login-section {
+            text-align: center;
+            padding: 40px 0;
+        }
+        .btn {
+            background: #0078d4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn:hover {
+            background: #106ebe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Kaizen</h1>
+            <p>Aplicação Corporativa - Volvo Group</p>
+        </div>
+
+        <div id="authenticated" style="display: none;">
+            <div class="user-info">
+                <h3>Bem-vindo(a)!</h3>
+                <p><strong>Nome:</strong> <span id="userName"></span></p>
+                <p><strong>Email:</strong> <span id="userEmail"></span></p>
+            </div>
+            <p>Você está autenticado e pode acessar a aplicação.</p>
+            <a href="/.auth/logout" class="btn">Sair</a>
+        </div>
+
+        <div id="unauthenticated" class="login-section">
+            <h2>Acesso Restrito</h2>
+            <p>Esta aplicação é exclusiva para colaboradores da Volvo Group.</p>
+            <a href="/.auth/login/aad" class="btn">Entrar com Microsoft</a>
+        </div>
+    </div>
+
+    <script>
+        async function checkAuth() {
+            try {
+                const response = await fetch('/.auth/me');
+                const payload = await response.json();
+                const { clientPrincipal } = payload;
+
+                if (clientPrincipal) {
+                    document.getElementById('userName').textContent = clientPrincipal.userDetails;
+                    document.getElementById('userEmail').textContent = clientPrincipal.userId;
+                    document.getElementById('authenticated').style.display = 'block';
+                    document.getElementById('unauthenticated').style.display = 'none';
+                } else {
+                    document.getElementById('authenticated').style.display = 'none';
+                    document.getElementById('unauthenticated').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro ao verificar autenticação:', error);
+                document.getElementById('authenticated').style.display = 'none';
+                document.getElementById('unauthenticated').style.display = 'block';
+            }
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>
