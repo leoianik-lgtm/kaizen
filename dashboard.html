@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Kaizen</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-badge {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #c3e6cb;
+            margin-bottom: 30px;
+        }
+        .auth-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #0078d4;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #106ebe;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🔒 Área Restrita - Dashboard</h1>
+                <p>Acesso autorizado apenas para colaboradores</p>
+            </div>
+            <div class="user-badge">
+                ✓ Autenticado
+            </div>
+        </div>
+
+        <div class="success-message">
+            <h3>✅ Login Validado com Sucesso!</h3>
+            <p>Parabéns! Você conseguiu acessar a área restrita da aplicação. Sua autenticação Microsoft foi validada corretamente.</p>
+        </div>
+
+        <div class="auth-details">
+            <h3>Detalhes da Autenticação</h3>
+            <p><strong>Nome:</strong> <span id="userName">Carregando...</span></p>
+            <p><strong>Email:</strong> <span id="userEmail">Carregando...</span></p>
+            <p><strong>Provedor:</strong> <span id="authProvider">Carregando...</span></p>
+            <p><strong>Horário de Login:</strong> <span id="loginTime">Carregando...</span></p>
+        </div>
+
+        <div>
+            <h3>🎯 Próximos Passos</h3>
+            <p>Esta página confirma que:</p>
+            <ul>
+                <li>A autenticação Microsoft está funcionando</li>
+                <li>As rotas estão protegidas corretamente</li>
+                <li>Apenas usuários autenticados podem acessar</li>
+                <li>Os dados do usuário são recuperados com sucesso</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <a href="/index.html" class="btn btn-secondary">← Voltar ao Início</a>
+            <a href="/.auth/logout" class="btn">Sair</a>
+        </div>
+    </div>
+
+    <script>
+        async function loadUserData() {
+            try {
+                const response = await fetch('/.auth/me');
+                const payload = await response.json();
+                const { clientPrincipal } = payload;
+
+                if (clientPrincipal) {
+                    document.getElementById('userName').textContent = clientPrincipal.userDetails || 'N/A';
+                    document.getElementById('userEmail').textContent = clientPrincipal.userId || 'N/A';
+                    document.getElementById('authProvider').textContent = clientPrincipal.identityProvider || 'Microsoft';
+                    document.getElementById('loginTime').textContent = new Date().toLocaleString('pt-BR');
+                } else {
+                    // Se não estiver autenticado, redireciona para login
+                    window.location.href = '/.auth/login/aad';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do usuário:', error);
+                window.location.href = '/index.html';
+            }
+        }
+
+        loadUserData();
+    </script>
+</body>
+</html>
