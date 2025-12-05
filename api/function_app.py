@@ -10,6 +10,15 @@ from database import db
 
 app = func.FunctionApp()
 
+@app.route(route="test", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def test_api(req: func.HttpRequest) -> func.HttpResponse:
+    """Simple test function"""
+    return func.HttpResponse(
+        json.dumps({"message": "API is working!", "status": "success"}),
+        status_code=200,
+        headers={"Content-Type": "application/json"}
+    )
+
 @app.route(route="kaizens", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
 def get_kaizens(req: func.HttpRequest) -> func.HttpResponse:
     """Get all kaizens with pagination and filtering"""
