@@ -14,10 +14,6 @@
     {
       "route": "/*",
       "allowedRoles": ["authenticated"]
-    },
-    {
-      "route": "/login",
-      "rewrite": "/.auth/login/aad"
     }
   ],
   "responseOverrides": {
