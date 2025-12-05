@@ -11,10 +11,16 @@ class DatabaseConnection:
         """Get database connection string from environment variables"""
         server = os.environ.get('DB_SERVER', 'your-server.database.windows.net')
         database = os.environ.get('DB_DATABASE', 'tmaportal')
-        username = os.environ.get('DB_USERNAME', 'kaizen_app_user')
-        password = os.environ.get('DB_PASSWORD', 'Volvo2026#Secure$')
         
-        return f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+        # Try Managed Identity first, fallback to username/password
+        use_managed_identity = os.environ.get('USE_MANAGED_IDENTITY', 'false').lower() == 'true'
+        
+        if use_managed_identity:
+            return f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};Authentication=ActiveDirectoryMsi;Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+        else:
+            username = os.environ.get('DB_USERNAME', 'kaizen_app_user')
+            password = os.environ.get('DB_PASSWORD', 'Volvo2026#Secure$')
+            return f"DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
     
     def execute_query(self, query: str, params: tuple = None) -> List[Dict[str, Any]]:
         """Execute SELECT query and return results as list of dictionaries"""
