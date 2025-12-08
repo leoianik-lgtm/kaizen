@@ -198,8 +198,11 @@
                     ...currentFilters
                 });
 
-                console.log('Fetching:', `/api/kaizens?${params}`);
-                const response = await fetch(`/api/kaizens?${params}`);
+                const apiUrl = 'https://kaizen-bba6guhvhhdxf2ba.swedencentral-01.azurewebsites.net/api/kaizens';
+                console.log('Fetching:', `${apiUrl}?${params}`);
+                const response = await fetch(`${apiUrl}?${params}`, {
+                    credentials: 'include'
+                });
                 
                 console.log('Response status:', response.status);
                 console.log('Response headers:', response.headers.get('content-type'));
