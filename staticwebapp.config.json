@@ -1,13 +1,17 @@
 {
   "routes": [
     {
+      "route": "/logout.html",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/*",
       "allowedRoles": ["authenticated"]
     }
   ],
   "responseOverrides": {
     "401": {
-      "redirect": "/.auth/login/aad",
+      "redirect": "/logout.html",
       "statusCode": 302
     }
   },
