@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
 const { requireApiKey, requireAuth } = require('../middleware/apiAuth');
+const { requireAuthOrSWA } = require('../auth');
 
 // GET /api/kaizens/export - Export all data for Power BI (no pagination)
 router.get('/export', requireApiKey, (req, res) => {
@@ -79,7 +80,7 @@ router.get('/download-db', requireApiKey, (req, res) => {
 });
 
 // GET /api/kaizens - Listar kaizens com paginação e filtros
-router.get('/', requireAuth, (req, res) => {
+router.get('/', requireAuthOrSWA, (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -172,7 +173,7 @@ router.get('/', requireAuth, (req, res) => {
 });
 
 // GET /api/kaizens/:id - Buscar kaizen específico
-router.get('/:id', requireAuth, (req, res) => {
+router.get('/:id', requireAuthOrSWA, (req, res) => {
     try {
         const { id } = req.params;
         

@@ -32,7 +32,7 @@ function extractUser(req, res, next) {
     next();
 }
 
-// Middleware para exigir autenticação
+// Middleware para exigir autenticação (SWA user only)
 function requireAuth(req, res, next) {
     if (!req.user) {
         return res.status(401).json({ 
@@ -43,4 +43,27 @@ function requireAuth(req, res, next) {
     next();
 }
 
-module.exports = { extractUser, requireAuth };
+// Middleware híbrido: aceita SWA user OU chamadas do SWA origin (já autenticado)
+function requireAuthOrSWA(req, res, next) {
+    // Check if user is authenticated via SWA header
+    if (req.user) {
+        req.authMethod = 'swa-user';
+        return next();
+    }
+    
+    // Check if request comes from SWA origin (user already authenticated there)
+    const origin = req.headers.origin || req.headers.referer;
+    const swaOrigin = 'https://agreeable-mushroom-003d5f703.3.azurestaticapps.net';
+    
+    if (origin && origin.startsWith(swaOrigin)) {
+        req.authMethod = 'swa-origin';
+        return next();
+    }
+    
+    return res.status(401).json({ 
+        error: 'Unauthorized',
+        message: 'Authentication required' 
+    });
+}
+
+module.exports = { extractUser, requireAuth, requireAuthOrSWA };
