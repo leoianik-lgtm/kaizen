@@ -1,9 +1,85 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
+const { requireApiKey, requireAuth } = require('../middleware/apiAuth');
+
+// GET /api/kaizens/export - Export all data for Power BI (no pagination)
+router.get('/export', requireApiKey, (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                k.*,
+                CAST((k.benefit / NULLIF(k.cost, 0)) AS REAL) as cost_benefit_ratio,
+                COUNT(ap.id) as action_count
+            FROM kaizens k
+            LEFT JOIN action_plans ap ON k.id = ap.kaizen_id
+            GROUP BY k.id
+            ORDER BY k.created_at DESC
+        `;
+        
+        const kaizens = db.prepare(query).all() || [];
+        
+        const formattedKaizens = kaizens.map(k => ({
+            ID: k.id,
+            KaizenNumber: k.kaizen_number,
+            TypeName: k.type_name,
+            DepartmentName: k.department_name,
+            ApplicationArea: k.application_area,
+            Leader: k.leader,
+            Team: k.team,
+            SQDCEPCategory: k.sqdcep_category,
+            ProblemDescription: k.problem_description,
+            ImprovementDescription: k.improvement_description,
+            Results: k.results,
+            Cost: k.cost,
+            Benefit: k.benefit,
+            CostBenefitRatio: k.cost_benefit_ratio,
+            IsStandardized: k.is_standardized === 1,
+            StandardizationNotes: k.standardization_notes,
+            Status: k.status,
+            SubmittedDate: k.submitted_date,
+            CompletedDate: k.completed_date,
+            CreatedBy: k.created_by,
+            CreatedAt: k.created_at,
+            UpdatedBy: k.updated_by,
+            UpdatedAt: k.updated_at,
+            ActionCount: k.action_count
+        }));
+        
+        res.json(formattedKaizens);
+        
+    } catch (error) {
+        console.error('Error in GET /api/kaizens/export:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/kaizens/download-db - Download SQLite database file
+router.get('/download-db', requireApiKey, (req, res) => {
+    try {
+        const fs = require('fs');
+        const path = require('path');
+        const dbPath = path.join(__dirname, '..', 'data', 'kaizens.db');
+        
+        if (!fs.existsSync(dbPath)) {
+            return res.status(404).json({ error: 'Database file not found' });
+        }
+        
+        res.download(dbPath, 'kaizens.db', (err) => {
+            if (err) {
+                console.error('Error downloading database:', err);
+                res.status(500).json({ error: 'Failed to download database' });
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error in GET /api/kaizens/download-db:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 // GET /api/kaizens - Listar kaizens com paginação e filtros
-router.get('/', (req, res) => {
+router.get('/', requireAuth, (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -96,7 +172,7 @@ router.get('/', (req, res) => {
 });
 
 // GET /api/kaizens/:id - Buscar kaizen específico
-router.get('/:id', (req, res) => {
+router.get('/:id', requireAuth, (req, res) => {
     try {
         const { id } = req.params;
         
@@ -121,7 +197,7 @@ router.get('/:id', (req, res) => {
 });
 
 // POST /api/kaizens - Criar novo kaizen
-router.post('/', (req, res) => {
+router.post('/', requireAuth, (req, res) => {
     try {
         const {
             type_name,
