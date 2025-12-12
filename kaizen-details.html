@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaizen Details - Volvo Group</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-draft { background: #fff3cd; color: #856404; }
+        .status-in-progress { background: #cce5ff; color: #004085; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        .description {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .description h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .description p {
+            color: #5a6c7d;
+            line-height: 1.6;
+        }
+        
+        .action-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .action-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .action-status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .action-status.pending { background: #fff3cd; color: #856404; }
+        .action-status.completed { background: #d4edda; color: #155724; }
+        .action-status.in-progress { background: #cce5ff; color: #004085; }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: white;
+            font-size: 18px;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading" class="loading">Loading kaizen details...</div>
+        
+        <div id="error" class="error" style="display: none;">
+            <h3>Error Loading Kaizen</h3>
+            <p id="errorMessage"></p>
+            <a href="/kaizen-list.html" class="btn">← Back to List</a>
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="header">
+                <div>
+                    <h1 id="kaizenTitle">Kaizen Details</h1>
+                    <p id="kaizenSubtitle"></p>
+                </div>
+                <div>
+                    <span id="statusBadge" class="status-badge"></span>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div>
+                    <div class="card">
+                        <h2>📋 Kaizen Information</h2>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Kaizen Number</div>
+                                <div class="info-value" id="kaizenNumber"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Type</div>
+                                <div class="info-value" id="typeName"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Department</div>
+                                <div class="info-value" id="departmentName"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Application Area</div>
+                                <div class="info-value" id="applicationArea"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Leader</div>
+                                <div class="info-value" id="leader"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Team</div>
+                                <div class="info-value" id="team"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">SQDCEP Category</div>
+                                <div class="info-value" id="sqdcepCategory"></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Created</div>
+                                <div class="info-value" id="createdAt"></div>
+                            </div>
+                        </div>
+
+                        <div class="description">
+                            <h3>Problem Description</h3>
+                            <p id="problemDescription"></p>
+                        </div>
+
+                        <div class="description">
+                            <h3>Improvement Description</h3>
+                            <p id="improvementDescription"></p>
+                        </div>
+
+                        <div class="description" id="resultsSection" style="display: none;">
+                            <h3>Results</h3>
+                            <p id="results"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card">
+                        <h2>💰 Financial Impact</h2>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Implementation Cost</div>
+                                <div class="info-value" id="cost">$0</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Expected Benefit</div>
+                                <div class="info-value" id="benefit">$0</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">ROI Ratio</div>
+                                <div class="info-value" id="roiRatio">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Standardized</div>
+                                <div class="info-value" id="isStandardized">No</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📝 Action Plans</h2>
+                        <div id="actionPlans">
+                            <p style="color: #7f8c8d; text-align: center; padding: 20px;">No action plans yet</p>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>📁 Attachments</h2>
+                        <div id="attachmentsList">
+                            <p style="color: #7f8c8d; text-align: center; padding: 20px;">No attachments</p>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <input type="file" id="fileInput" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip">
+                            <button onclick="document.getElementById('fileInput').click()" class="btn btn-secondary">+ Add File</button>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>⚡ Actions</h2>
+                        <a href="#" class="btn">Edit Kaizen</a>
+                        <a href="#" class="btn btn-secondary">Add Action Plan</a>
+                        <a href="/kaizen-list.html" class="btn btn-secondary">← Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadKaizenDetails() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const kaizenId = urlParams.get('id');
+                
+                if (!kaizenId) {
+                    throw new Error('Kaizen ID not provided');
+                }
+
+                const response = await fetch(`https://kaizen-bba6guhvhhdxf2ba.swedencentral-01.azurewebsites.net/api/kaizens/${kaizenId}`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load kaizen: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentKaizenId = kaizenId;
+                displayKaizenDetails(data.kaizen, data.actions);
+                loadAttachments();
+
+            } catch (error) {
+                console.error('Error loading kaizen:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+            }
+        }
+
+        function displayKaizenDetails(kaizen, actions) {
+            // Header
+            document.getElementById('kaizenTitle').textContent = kaizen.kaizen_number;
+            document.getElementById('kaizenSubtitle').textContent = `${kaizen.type_name} Kaizen - ${kaizen.department_name}`;
+            
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = kaizen.status;
+            statusBadge.className = `status-badge status-${kaizen.status.toLowerCase().replace(' ', '-')}`;
+
+            // Basic info
+            document.getElementById('kaizenNumber').textContent = kaizen.kaizen_number;
+            document.getElementById('typeName').textContent = kaizen.type_name;
+            document.getElementById('departmentName').textContent = kaizen.department_name;
+            document.getElementById('applicationArea').textContent = kaizen.application_area;
+            document.getElementById('leader').textContent = kaizen.leader;
+            document.getElementById('team').textContent = kaizen.team || 'Not specified';
+            document.getElementById('sqdcepCategory').textContent = kaizen.sqdcep_category;
+            document.getElementById('createdAt').textContent = new Date(kaizen.created_at).toLocaleDateString();
+
+            // Descriptions
+            document.getElementById('problemDescription').textContent = kaizen.problem_description;
+            document.getElementById('improvementDescription').textContent = kaizen.improvement_description;
+            
+            if (kaizen.results) {
+                document.getElementById('results').textContent = kaizen.results;
+                document.getElementById('resultsSection').style.display = 'block';
+            }
+
+            // Financial
+            document.getElementById('cost').textContent = `$${(kaizen.cost || 0).toLocaleString()}`;
+            document.getElementById('benefit').textContent = `$${(kaizen.benefit || 0).toLocaleString()}`;
+            
+            const roi = kaizen.cost > 0 ? (kaizen.benefit / kaizen.cost).toFixed(2) : '-';
+            document.getElementById('roiRatio').textContent = roi !== '-' ? `${roi}x` : '-';
+            
+            document.getElementById('isStandardized').textContent = kaizen.is_standardized ? 'Yes' : 'No';
+
+            // Action plans
+            displayActionPlans(actions);
+
+            // Show content
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
+
+        function displayActionPlans(actions) {
+            const container = document.getElementById('actionPlans');
+            
+            if (!actions || actions.length === 0) {
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            actions.forEach(action => {
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'action-item';
+                actionDiv.innerHTML = `
+                    <div class="action-header">
+                        <div class="action-title">${action.action_description}</div>
+                        <span class="action-status ${action.status.toLowerCase().replace(' ', '-')}">${action.status}</span>
+                    </div>
+                    <div style="color: #7f8c8d; font-size: 14px;">
+                        <strong>Responsible:</strong> ${action.responsible_person}<br>
+                        <strong>Due:</strong> ${new Date(action.due_date).toLocaleDateString()}
+                        ${action.notes ? `<br><strong>Notes:</strong> ${action.notes}` : ''}
+                    </div>
+                `;
+                container.appendChild(actionDiv);
+            });
+        }
+
+        let currentKaizenId = null;
+
+        // File upload handler
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file || !currentKaizenId) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`https://kaizen-bba6guhvhhdxf2ba.swedencentral-01.azurewebsites.net/api/attachments/${currentKaizenId}`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    loadAttachments();
+                    e.target.value = ''; // Clear input
+                } else {
+                    const error = await response.json();
+                    alert('Upload failed: ' + error.error);
+                }
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+            }
+        });
+
+        async function loadAttachments() {
+            if (!currentKaizenId) return;
+
+            try {
+                const response = await fetch(`https://kaizen-bba6guhvhhdxf2ba.swedencentral-01.azurewebsites.net/api/attachments/${currentKaizenId}`, {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayAttachments(data.attachments);
+                }
+            } catch (error) {
+                console.error('Error loading attachments:', error);
+            }
+        }
+
+        function displayAttachments(attachments) {
+            const container = document.getElementById('attachmentsList');
+            
+            if (!attachments || attachments.length === 0) {
+                container.innerHTML = '<p style="color: #7f8c8d; text-align: center; padding: 20px;">No attachments</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            attachments.forEach(attachment => {
+                const attachmentDiv = document.createElement('div');
+                attachmentDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 10px;';
+                
+                attachmentDiv.innerHTML = `
+                    <div>
+                        <a href="${attachment.url}" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600;">
+                            📎 ${attachment.name}
+                        </a>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                            Uploaded by ${attachment.uploadedBy} on ${new Date(attachment.uploadedAt).toLocaleDateString()}
+                        </div>
+                    </div>
+                    <button onclick="removeAttachment('${attachment.id}')" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                        Remove
+                    </button>
+                `;
+                
+                container.appendChild(attachmentDiv);
+            });
+        }
+
+        async function removeAttachment(attachmentId) {
+            if (!confirm('Are you sure you want to remove this attachment?')) return;
+
+            try {
+                const response = await fetch(`https://kaizen-bba6guhvhhdxf2ba.swedencentral-01.azurewebsites.net/api/attachments/${currentKaizenId}/${attachmentId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    loadAttachments();
+                } else {
+                    const error = await response.json();
+                    alert('Remove failed: ' + error.error);
+                }
+            } catch (error) {
+                alert('Remove failed: ' + error.message);
+            }
+        }
+
+        loadKaizenDetails();
+    </script>
+</body>
+</html>

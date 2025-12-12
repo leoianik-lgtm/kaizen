@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { extractUser } = require('./src/auth');
 const kaizensRouter = require('./src/routes/kaizens');
+const attachmentsRouter = require('./src/routes/attachments');
 const { dbReady } = require('./src/db');
 
 const app = express();
@@ -40,6 +41,7 @@ app.get('/', (req, res) => {
 
 // Rotas da API
 app.use('/api/kaizens', kaizensRouter);
+app.use('/api/attachments', attachmentsRouter);
 
 // Error handler
 app.use((err, req, res, next) => {

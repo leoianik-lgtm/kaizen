@@ -60,6 +60,9 @@
             text-align: left;
             border-bottom: 1px solid #eee;
         }
+        .kaizen-table tbody tr:hover {
+            background: #f8f9fa;
+        }
         .kaizen-table th {
             background: #f8f9fa;
             font-weight: bold;
@@ -123,7 +126,7 @@
             </div>
             <div>
                 <a href="/" class="btn">← Dashboard</a>
-                <a href="#" class="btn">+ New Kaizen</a>
+                <a href="/create-kaizen.html" class="btn">+ New Kaizen</a>
             </div>
         </div>
 
@@ -237,6 +240,8 @@
 
             kaizens.forEach(kaizen => {
                 const row = document.createElement('tr');
+                row.style.cursor = 'pointer';
+                row.onclick = () => window.location.href = `/kaizen-details.html?id=${kaizen.ID}`;
                 row.innerHTML = `
                     <td><strong>${kaizen.KaizenNumber}</strong></td>
                     <td>${kaizen.TypeName}</td>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaizen Dashboard - Volvo Group</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -270,7 +271,7 @@
                             <span>📊</span>
                             <span>View All Kaizens</span>
                         </a>
-                        <a href="#" class="action-btn secondary">
+                        <a href="/create-kaizen.html" class="action-btn secondary">
                             <span>➕</span>
                             <span>Create New Kaizen</span>
                         </a>
@@ -279,6 +280,18 @@
                             <span>Analytics & Reports</span>
                         </a>
                     </div>
+                </div>
+            </div>
+
+            <div class="content-grid" style="margin-top: 30px;">
+                <div class="card">
+                    <h2>📊 Status Distribution</h2>
+                    <canvas id="statusChart" width="400" height="200"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>🏢 Department Breakdown</h2>
+                    <canvas id="departmentChart" width="400" height="200"></canvas>
                 </div>
             </div>
         </div>
@@ -350,6 +363,9 @@
                     recentContainer.appendChild(item);
                 });
 
+                // Create charts
+                createCharts(kaizens);
+
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('dashboardContent').style.display = 'block';
 
@@ -358,6 +374,76 @@
                 document.getElementById('loading').innerHTML = 
                     '<p style="color: red;">Error loading dashboard data. Please try again.</p>';
             }
+        }
+
+        function createCharts(kaizens) {
+            // Status Chart
+            const statusCounts = {
+                'Draft': 0,
+                'In Progress': 0,
+                'Completed': 0
+            };
+            
+            kaizens.forEach(k => {
+                statusCounts[k.Status] = (statusCounts[k.Status] || 0) + 1;
+            });
+
+            new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: ['#fff3cd', '#cce5ff', '#d4edda'],
+                        borderColor: ['#856404', '#004085', '#155724'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Department Chart
+            const deptCounts = {};
+            kaizens.forEach(k => {
+                deptCounts[k.DepartmentName] = (deptCounts[k.DepartmentName] || 0) + 1;
+            });
+
+            new Chart(document.getElementById('departmentChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(deptCounts),
+                    datasets: [{
+                        label: 'Kaizens',
+                        data: Object.values(deptCounts),
+                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
         }
 
         loadUserData();

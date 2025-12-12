@@ -60,7 +60,7 @@ router.get('/download-db', requireApiKey, (req, res) => {
     try {
         const fs = require('fs');
         const path = require('path');
-        const dbPath = path.join(__dirname, '..', 'data', 'kaizens.db');
+        const dbPath = path.join(__dirname, '..', '..', 'data', 'kaizens.db');
         
         if (!fs.existsSync(dbPath)) {
             return res.status(404).json({ error: 'Database file not found' });
@@ -200,24 +200,24 @@ router.get('/:id', requireAuthOrSWA, (req, res) => {
 // POST /api/kaizens - Criar novo kaizen
 router.post('/', requireAuth, (req, res) => {
     try {
-        const {
-            type_name,
-            department_name,
-            application_area,
-            leader,
-            team,
-            sqdcep_category,
-            problem_description,
-            improvement_description,
-            results,
-            cost,
-            benefit
-        } = req.body;
+        const data = req.body;
         
         // Validações básicas
-        if (!type_name || !department_name || !application_area || !leader || 
-            !sqdcep_category || !problem_description || !improvement_description) {
+        if (!data.type_name || !data.department_name || !data.application_area || 
+            !data.leader || !data.sqdcep_category || !data.problem) {
             return res.status(400).json({ error: 'Missing required fields' });
+        }
+        
+        // Validações específicas por tipo
+        if (data.type_name === 'Quick') {
+            if (!data.problem_sketch || !data.improvement_future_situation) {
+                return res.status(400).json({ error: 'Missing required Quick Kaizen fields' });
+            }
+        } else if (data.type_name === 'Standard') {
+            if (!data.root_cause_analysis || !data.current_state_analysis || 
+                !data.future_state_analysis || !data.standardization_detailed) {
+                return res.status(400).json({ error: 'Missing required Standard Kaizen fields' });
+            }
         }
         
         // Gerar kaizen number
@@ -228,22 +228,41 @@ router.post('/', requireAuth, (req, res) => {
         const created_by = req.user?.userId || 'system';
         const created_at = new Date().toISOString();
         
+        // Preparar campos para inserção
+        const fields = [
+            'kaizen_number', 'type_name', 'department_name', 'application_area',
+            'leader', 'team', 'sqdcep_category', 'problem', 'status', 'created_by', 'created_at'
+        ];
+        
+        const values = [
+            kaizen_number, data.type_name, data.department_name, data.application_area,
+            data.leader, data.team, data.sqdcep_category, data.problem, 'Draft', created_by, created_at
+        ];
+        
+        // Adicionar campos específicos do tipo
+        const optionalFields = [
+            'problem_sketch', 'improvement_future_situation', 'check_results',
+            'cost_summary', 'benefit_summary', 'cb_ratio_summary', 'standardization',
+            'root_cause_analysis', 'current_state_analysis', 'future_state_analysis',
+            'picture_of_solution', 'monitoring', 'benefit_detailed', 'cost_detailed',
+            'bc_detailed', 'standardization_detailed'
+        ];
+        
+        optionalFields.forEach(field => {
+            if (data[field]) {
+                fields.push(field);
+                values.push(data[field]);
+            }
+        });
+        
         // Inserir kaizen
+        const placeholders = fields.map(() => '?').join(', ');
         const insert = db.prepare(`
-            INSERT INTO kaizens (
-                kaizen_number, type_name, department_name, application_area,
-                leader, team, sqdcep_category, problem_description,
-                improvement_description, results, cost, benefit, status,
-                created_by, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO kaizens (${fields.join(', ')})
+            VALUES (${placeholders})
         `);
         
-        const result = insert.run(
-            kaizen_number, type_name, department_name, application_area,
-            leader, team, sqdcep_category, problem_description,
-            improvement_description, results, cost || 0, benefit || 0, 'Draft',
-            created_by, created_at
-        );
+        const result = insert.run(...values);
         
         res.status(201).json({
             id: result.lastInsertRowid,
